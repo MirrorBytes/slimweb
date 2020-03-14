@@ -6,7 +6,7 @@ license = "MIT"
 readme = "README.md"
 description = "Slim HTTP 1.1 client/server library"
 repository = "https://github.com/MirrorBytes/slimweb"
-keywords = [ "web", "client", "server", "request", "http", "https", "rest", "api" ]
+keywords = [ "web", "http", "https", "rest", "api" ]
 include = [ "Cargo.toml", "src/**/*.rs", "LICENSE", "README.md" ]
 edition = "2018"
 
