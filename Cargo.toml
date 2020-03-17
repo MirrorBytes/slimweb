@@ -1,6 +1,6 @@
 [package]
 name = "slimweb"
-version = "0.1.1"
+version = "0.1.2"
 authors = [ "Bob Koller" ]
 license = "MIT"
 readme = "README.md"

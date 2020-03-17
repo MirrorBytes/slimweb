@@ -210,7 +210,7 @@ impl Server {
 							)
 						};
 
-						stream::write_all_until(&mut compressed, &body, &mut None)?;
+						stream::write_all_until(&mut compressed, &body, &mut self.deadline)?;
 					}
 				} else {
 					warn!("No handler available for this resource.");
