@@ -170,6 +170,7 @@ impl Server {
 
 			let expect_handlers = expect_handlers.lock().unwrap();
 
+			// Check for 100-Continue
 			if info.headers.get("Expect").is_some() && !expect_handlers.is_empty() {
 				continue_100 = true;
 
@@ -240,6 +241,7 @@ fn process_request(stream: &mut Stream, info: GeneralInfo, deadline: &mut Option
 			let mut head: Vec<u8> = resp.info.into();
 			writeln!(head, "\r").unwrap();
 
+			// TODO: This isn't following deadlines. That needs to change.
 			stream.write_all(&head)?;
 			stream.flush()?;
 

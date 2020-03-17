@@ -181,9 +181,11 @@ impl ClientRequest {
 			self.deadline = Some((*line, Instant::now()));
 		}
 
+		// TODO: This isn't following deadlines. That needs to change.
 		req_stream.write_all(&req)?;
 		req_stream.flush()?;
 
+		// Check for 100-Continue
 		if self.headers.get("Expect").is_some() {
 			let resp = ClientResponse::new(&mut req_stream, &mut self.deadline)?;
 

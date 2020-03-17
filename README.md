@@ -33,3 +33,4 @@ features = [ "server" ]
 - [X] Server deadlines
 - [X] [100-Continue](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/100)
 - [ ] Multipart
+- [ ] Strict adherence to deadlines
