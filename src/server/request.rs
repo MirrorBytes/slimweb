@@ -15,8 +15,7 @@ pub struct ServerRequest {
 }
 
 impl ServerRequest {
-	pub(crate) fn new(stream: &mut Stream, mut deadline: Option<(Instant, Instant)>) -> Result<ServerRequest, Error> {
-		let info = stream::process_lines(stream)?;
+	pub(crate) fn new(stream: &mut Stream, info: GeneralInfo, deadline: &mut Option<(Instant, Instant)>) -> Result<ServerRequest, Error> {
 		let headers = info.headers.clone();
 		let (check_compressed, check_chunked) = stream::check_encodings(&headers);
 
@@ -36,7 +35,7 @@ impl ServerRequest {
 			let mut chunked = Chunked::new(stream, None, check_chunked);
 			let mut compressed = Compressed::new(&mut chunked, None, None, check_compressed);
 
-			stream::read_to_end_until(&mut compressed, &mut body, content_length, &mut deadline)?;
+			stream::read_to_end_until(&mut compressed, &mut body, content_length, deadline)?;
 		}
 
 		Ok(ServerRequest {

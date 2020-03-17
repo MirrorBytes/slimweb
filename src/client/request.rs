@@ -55,8 +55,6 @@ pub struct ClientRequest {
 	max_redirects: usize,
 	redirects: Vec<(bool, String, String)>,
 
-	compression: bool,
-	check_target_encodings: bool,
 	compression_level: Option<u32>,
 	chunk_size: Option<usize>,
 
@@ -78,8 +76,6 @@ impl ClientRequest {
 			max_redirects: 5,
 			redirects: vec![],
 
-			compression: false,
-			check_target_encodings: false,
 			compression_level: None,
 			chunk_size: None,
 
@@ -130,44 +126,17 @@ impl ClientRequest {
 		self
 	}
 
-	/// Enable compression.
-	///
-	/// Enables for both request (if [`request.enable_compression()`](struct.ClientRequest.html#method.enable_compression) is called) and response.
-	#[cfg(feature = "compress")]
-	pub fn enable_compression(mut self) -> ClientRequest {
-		self.compression = true;
-
-		self
-	}
-
-	/// Checks target's encodings.
-	/// Recommended for larger requests.
-	///
-	/// This is useless if you don't enabled compression via [`request.enable_compression()`](struct.ClientRequest.html#method.enable_compression)
-	/// OR set a chunk size via [`request.set_chunk_size()`](struct.ClientRequest.html#method.set_chunk_size)
-	pub fn check_target_encodings(mut self) -> ClientRequest {
-		self.check_target_encodings = true;
-
-		self
-	}
-
 	/// Sets request compression level.
-	///
-	/// Only used if [`request.check_target_encodings()`](struct.ClientRequest.html#method.check_target_encodings) AND [`request.enable_compression()`](struct.ClientRequest.html#method.enable_compression) is called.
 	#[cfg(feature = "compress")]
 	pub fn set_compression_level(mut self, level: u32) -> ClientRequest {
-		if self.compression && self.check_target_encodings {
-			self.compression_level = Some(level);
-		}
+		self.compression_level = Some(level);
 
 		self
 	}
 
 	/// Sets request chunk size.
 	pub fn set_chunk_size(mut self, chunk_size: usize) -> ClientRequest {
-		if self.check_target_encodings {
-			self.chunk_size = Some(chunk_size);
-		}
+		self.chunk_size = Some(chunk_size);
 
 		self
 	}
@@ -199,24 +168,6 @@ impl ClientRequest {
 			req_stream = Stream::Http(BufReader::new(tcp));
 		}
 
-		// Check if compression is to be used for body.
-		if self.compression && self.check_target_encodings {
-			let mut check_req = ClientRequest::new("OPTIONS", &self.url.host)?;
-
-			if self.deadline.is_some() {
-				check_req.deadline = self.deadline;
-			}
-
-			let check_resp = check_req.send()?;
-
-			if let Some(accept) = check_resp.info.headers.get("Accept-Encoding") {
-				self.compression = accept
-					.split(',')
-					.map(|s| s.trim())
-					.any(|s| s.eq_ignore_ascii_case("gzip"));
-			}
-		}
-
 		let req = gen_head(&self)?;
 
 		// Write head to stream. Clear req.
@@ -233,6 +184,16 @@ impl ClientRequest {
 		req_stream.write_all(&req)?;
 		req_stream.flush()?;
 
+		if self.headers.get("Expect").is_some() {
+			let resp = ClientResponse::new(&mut req_stream, &mut self.deadline)?;
+
+			if let StatusInfo::Response(code, _) = resp.info.status {
+				if code != 100 {
+					return Ok(resp);
+				}
+			}
+		}
+
 		if let Some(body) = &self.body {
 			let mut chunked = Chunked::new(
 				&mut req_stream,
@@ -242,19 +203,19 @@ impl ClientRequest {
 
 			let body: Vec<u8> = body.into();
 
-			let mut compressed = if self.compression && self.compression_level.is_some() {
+			let mut compressed = if self.compression_level.is_some() {
 				Compressed::new(
 					&mut chunked,
 					self.compression_level,
 					Some(&body),
-					self.compression
+					true
 				)
-			} else { // Just in case compression level not set OR compression isn't being used.
+			} else {
 				Compressed::new(
 					&mut chunked,
-					Some(0),
+					None,
 					Some(&body),
-					self.compression
+					false
 				)
 			};
 
@@ -263,7 +224,7 @@ impl ClientRequest {
 		}
 
 		// Get response from Stream.
-		let resp = ClientResponse::new(req_stream, &mut self.deadline)?;
+		let resp = ClientResponse::new(&mut req_stream, &mut self.deadline)?;
 
 		// Grab status code from response.
 		let mut status_code = 0;
@@ -435,7 +396,7 @@ fn gen_head(request: &ClientRequest) -> Result<Vec<u8>, Error> {
 		writeln!(head, "Transfer-Encoding: chunked\r")?;
 	}
 
-	if request.compression {
+	if request.compression_level.is_some() {
 		writeln!(head, "Content-Encoding: gzip\r")?;
 	}
 

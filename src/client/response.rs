@@ -19,11 +19,11 @@ pub struct ClientResponse {
 
 impl ClientResponse {
 	/// Create a new ClientResponse using Stream (either http or https), and a deadline (if one is set).
-	pub(crate) fn new(mut stream: Stream, deadline: &mut Option<(Instant, Instant)>) -> Result<ClientResponse, Error> {
-		let mut info = stream::process_lines(&mut stream)?;
+	pub(crate) fn new(stream: &mut Stream, deadline: &mut Option<(Instant, Instant)>) -> Result<ClientResponse, Error> {
+		let mut info = stream::process_lines(stream)?;
 		let (compressed, chunked) = stream::check_encodings(&info.headers);
 
-		let mut chunked = Chunked::new(&mut stream, None, chunked);
+		let mut chunked = Chunked::new(stream, None, chunked);
 		let mut compressed = Compressed::new(&mut chunked, None, None, compressed);
 
 		let mut content_length: Option<usize> = None;

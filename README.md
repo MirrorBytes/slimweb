@@ -31,5 +31,5 @@ features = [ "server" ]
 
 ### ITW
 - [X] Server deadlines
-- [ ] 100-Continue
+- [X] [100-Continue](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/100)
 - [ ] Multipart
