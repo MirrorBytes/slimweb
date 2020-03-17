@@ -30,6 +30,6 @@ features = [ "server" ]
 ```
 
 ### ITW
-- [ ] Server deadlines
+- [X] Server deadlines
 - [ ] 100-Continue
 - [ ] Multipart

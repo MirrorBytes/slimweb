@@ -60,7 +60,7 @@ pub struct ClientRequest {
 	compression_level: Option<u32>,
 	chunk_size: Option<usize>,
 
-	// deadline, reset.
+	// deadline, reset
 	deadline: Option<(Instant, Instant)>,
 }
 

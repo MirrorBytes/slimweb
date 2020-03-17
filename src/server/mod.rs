@@ -1,5 +1,6 @@
 use std::{
 	net::{ ToSocketAddrs, TcpListener },
+	time::{ Instant, Duration },
 	io::{
 		BufReader, Write,
 		Result as IoResult,
@@ -47,6 +48,9 @@ pub struct Server {
 	tls_config: Option<Arc<ServerConfig>>,
 
 	compression: bool,
+
+	// deadline, reset
+	deadline: Option<(Instant, Instant)>,
 }
 
 impl Server {
@@ -62,6 +66,8 @@ impl Server {
 			tls_config: None,
 
 			compression: false,
+
+			deadline: None,
 		})
 	}
 
@@ -120,6 +126,14 @@ impl Server {
 		self
 	}
 
+
+	/// Sets deadline for request.
+	pub fn set_deadline(mut self, time: u64) -> Server {
+		self.deadline = Some((Instant::now() + Duration::from_secs(time), Instant::now()));
+
+		self
+	}
+
 	/// Start server loop, and begin handling requests.
 	pub fn run(&self) -> IoResult<()> {
 		let local_addr = self.listener.local_addr()?;
@@ -144,7 +158,8 @@ impl Server {
 				tcp = Stream::Http(BufReader::new(stream?));
 			}
 
-			let req = ServerRequest::new(&mut tcp)?;
+			// Parse request from stream.
+			let req = ServerRequest::new(&mut tcp, self.deadline)?;
 
 			if let StatusInfo::Request(method, resource) = req.info.clone().status {
 				if let Some(handler) = handlers.clone().lock().unwrap().get(&(method, resource)) {
