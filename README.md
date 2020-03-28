@@ -20,17 +20,19 @@ So, I'm throwing another into the mix that will probably hit that same point.
 slimweb = "0.1"
 ```
 
-OR for using Server:
-```toml
-[dependencies.slimweb]
-version = "0.1"
-default-features = false
+### Features
+- Client (default)
+- Server
 
-features = [ "server" ]
-```
+- tls (security)
+- json
+- compress (both compression and decompression)
+- punycode (for client only)
+- multipart (multipart/form-data)
 
 ### ITW
 - [X] Server deadlines
 - [X] [100-Continue](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/100)
-- [ ] Multipart
+- [X] Multipart/form-data
 - [ ] Strict adherence to deadlines
+- [ ] Better tests

@@ -537,7 +537,6 @@ pub(crate) fn process_lines(stream: &mut Stream) -> Result<GeneralInfo, Error> {
 
 		// We've hit the body.
 		if buf.is_empty() {
-
 			break;
 		}
 

@@ -5,10 +5,6 @@ use crate::{
 	StatusInfo,
 };
 
-// TODO: Add these tests:
-// ----- Deadline
-// ----- Check encodings (for compressing and/or chunking request).
-
 
 
 #[test]

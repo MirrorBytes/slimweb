@@ -57,17 +57,17 @@ pub struct ServerResponse {
 
 impl Into<Vec<u8>> for ServerResponse {
 	fn into(self) -> Vec<u8> {
-		let mut head = vec![];
+		let mut resp_data = vec![];
 
-		head.extend::<Vec<u8>>(self.info.into());
+		resp_data.extend::<Vec<u8>>(self.info.into());
 
-		writeln!(head, "\r").unwrap();
+		writeln!(resp_data, "\r").unwrap();
 
 		if let Some(body) = self.body {
-			head.extend::<Vec<u8>>(body.into());
+			resp_data.extend::<Vec<u8>>(body.into());
 		}
 
-		head
+		resp_data
 	}
 }
 

@@ -1,8 +1,10 @@
 use std::time::Instant;
 
 use crate::{
+	multipart,
 	stream::{ self, Stream, Chunked, Compressed },
 	error::Error,
+	body::Body,
 	GeneralInfo,
 };
 
@@ -11,7 +13,7 @@ use crate::{
 #[derive(Debug)]
 pub struct ServerRequest {
 	pub info: GeneralInfo,
-	pub body: Vec<u8>,
+	pub body: Body,
 }
 
 impl ServerRequest {
@@ -29,13 +31,23 @@ impl ServerRequest {
 			}
 		}
 
-		let mut body = vec![];
+		let mut body_bytes = vec![];
 
 		if check_chunked || content_length.is_some() {
 			let mut chunked = Chunked::new(stream, None, check_chunked);
 			let mut compressed = Compressed::new(&mut chunked, None, None, check_compressed);
 
-			stream::read_to_end_until(&mut compressed, &mut body, content_length, deadline)?;
+			stream::read_to_end_until(&mut compressed, &mut body_bytes, content_length, deadline)?;
+		}
+
+		let mut body: Body = body_bytes.clone().into();
+
+		if let Some(content_type) = info.headers.get("Content-Type") {
+			let type_split: Vec<&str> = content_type.split(';').collect();
+
+			if type_split[0] == "multipart/form-data" {
+				body = multipart::from_bytes(type_split[1], body_bytes)?.into();
+			}
 		}
 
 		Ok(ServerRequest {

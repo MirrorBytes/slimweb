@@ -1,3 +1,6 @@
+#[cfg(feature = "multipart")]
+use crate::multipart::Multipart;
+
 #[cfg(feature = "json")]
 use serde_json::Value;
 
@@ -10,6 +13,9 @@ pub enum Body {
 	Text(String),
 	/// Converted bytes
 	Bytes(Vec<u8>),
+	/// Multipart
+	#[cfg(feature = "multipart")]
+	Multipart(Multipart),
 	/// JSON
 	#[cfg(feature = "json")]
 	Json(Value),
@@ -33,6 +39,13 @@ impl From<&Vec<u8>> for Body {
 	}
 }
 
+#[cfg(feature = "multipart")]
+impl From<Multipart> for Body {
+	fn from(body: Multipart) -> Body {
+		Body::Multipart(body)
+	}
+}
+
 #[cfg(feature = "json")]
 impl From<Value> for Body {
 	fn from(body: Value) -> Body {
@@ -45,6 +58,8 @@ impl Into<Vec<u8>> for Body {
 		match self {
 			Body::Text(text) => text.as_bytes().to_vec(),
 			Body::Bytes(bytes) => bytes,
+			#[cfg(feature = "multipart")]
+			Body::Multipart(multipart) => multipart.into(),
 			#[cfg(feature = "json")]
 			Body::Json(value) => serde_json::to_vec(&value).expect("Bad JSON value"),
 		}
@@ -56,6 +71,8 @@ impl Into<Vec<u8>> for &Body {
 		match self {
 			Body::Text(text) => text.as_bytes().to_vec(),
 			Body::Bytes(bytes) => bytes.to_owned(),
+			#[cfg(feature = "multipart")]
+			Body::Multipart(multipart) => multipart.into(),
 			#[cfg(feature = "json")]
 			Body::Json(value) => serde_json::to_vec(&value).expect("Bad JSON value"),
 		}
@@ -67,6 +84,12 @@ impl Into<String> for &Body {
 		match self {
 			Body::Text(text) => text.to_string(),
 			Body::Bytes(bytes) => String::from_utf8_lossy(&bytes).to_string(),
+			#[cfg(feature = "multipart")]
+			Body::Multipart(multipart) => {
+				let multipart_bytes: Vec<u8> = multipart.into();
+
+				String::from_utf8_lossy(&multipart_bytes).to_string()
+			},
 			#[cfg(feature = "json")]
 			Body::Json(value) => value.to_string(),
 		}
@@ -79,6 +102,12 @@ impl Into<Value> for &Body {
 		match self {
 			Body::Text(text) => serde_json::from_str(text).unwrap(),
 			Body::Bytes(bytes) => serde_json::from_slice(&bytes).unwrap(),
+			#[cfg(feature = "multipart")]
+			Body::Multipart(multipart) => {
+				let multipart_bytes: Vec<u8> = multipart.into();
+
+				serde_json::from_slice(&multipart_bytes).unwrap()
+			},
 			#[cfg(feature = "json")]
 			Body::Json(value) => value.to_owned(),
 		}

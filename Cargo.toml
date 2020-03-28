@@ -1,6 +1,6 @@
 [package]
 name = "slimweb"
-version = "0.2.0"
+version = "0.3.0"
 authors = [ "Bob Koller" ]
 license = "MIT"
 readme = "README.md"
@@ -22,6 +22,8 @@ json = [ "serde_json" ]
 
 compress = [ "flate2" ]
 
+multipart = [ "mime_guess" ]
+
 [dependencies]
 log = "0.4"
 base64 = "0.11"
@@ -35,3 +37,5 @@ webpki-roots = { version = "0.18", optional = true }
 lazy_static = { version = "1.4", optional = true }
 
 flate2 = { version = "1.0", optional = true }
+
+mime_guess = { version = "2.0", optional = true }

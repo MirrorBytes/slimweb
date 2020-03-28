@@ -26,11 +26,13 @@ use serde_json::Value;
 #[macro_use] mod macros;
 mod error;
 mod body;
+#[cfg(feature = "multipart")] mod multipart;
 mod stream;
 #[cfg(feature = "client")] mod client;
 #[cfg(feature = "server")] mod server;
 
 pub use error::*;
+#[cfg(feature = "multipart")] pub use multipart::*;
 #[cfg(feature = "client")] pub use client::*;
 #[cfg(feature = "server")] pub use server::*;
 
