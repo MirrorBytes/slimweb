@@ -17,7 +17,7 @@ So, I'm throwing another into the mix that will probably hit that same point.
 ### Installation
 ```toml
 [dependencies]
-slimweb = "0.1"
+slimweb = "0.3"
 ```
 
 ### Features
